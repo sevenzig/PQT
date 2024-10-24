@@ -2,25 +2,41 @@
 name = "dashboard"
 version = "0.1.0"
 edition = "2021"
+description = "WebAssembly dashboard for probiotic quality data"
+authors = ["Your Name"]
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
-wasm-bindgen = "0.2"
-js-sys = "0.3"
-web-sys = { version = "0.3", features = [
+wasm-bindgen = { version = "0.2.87", features = ["serde-serialize"] }
+js-sys = "0.3.64"
+web-sys = { version = "0.3.64", features = [
     "Document",
     "Element",
     "HtmlElement",
-    "Node",
     "Window",
     "HtmlDivElement",
     "HtmlTableElement",
     "HtmlTableSectionElement",
     "HtmlTableRowElement",
     "HtmlTableCellElement",
+    "console"
 ] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-wasm-bindgen-futures = "0.4"
+wasm-bindgen-futures = "0.4.37"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
+[package.metadata.wasm-pack.profile.profiling]
+wasm-opt = false

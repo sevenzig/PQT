@@ -3,223 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WASM Dashboard</title>
+    <title>Probiotic Quality Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .error { color: red; padding: 1rem; }
+        .success { color: green; padding: 1rem; }
+    </style>
 </head>
 <body>
-    <script type="module">
-        import init, { create_dashboard, update_purity_data, create_potency_chart, create_activity_chart } from './pkg/dashboard.js';
-        
-        async function run() {
-            // Initialize WASM
-            await init();
-            
-            // Complete dataset from CSV files
-            const purityData = [
-                {
-                    "description": "Coliforms",
-                    "specification": "<100 CFU/GM",
-                    "result": "<100 CFU/GM",
-                    "method": "AOAC 991.14",
-                    "pass_fail": "Pass",
-                    "evaluation": "Microbial"
-                },
-                {
-                    "description": "E. Coli",
-                    "specification": "Negative/10GM",
-                    "result": "Negative/10GM",
-                    "method": "AOAC 991.14",
-                    "pass_fail": "Pass",
-                    "evaluation": "Microbial"
-                },
-                {
-                    "description": "Salmonella",
-                    "specification": "Negative/10GM",
-                    "result": "Negative/10GM",
-                    "method": "AOAC 2013.09",
-                    "pass_fail": "Pass",
-                    "evaluation": "Microbial"
-                },
-                {
-                    "description": "Staphylococcus aureus",
-                    "specification": "Negative/10GM",
-                    "result": "Negative/10GM",
-                    "method": "AOAC 2003.11",
-                    "pass_fail": "Pass",
-                    "evaluation": "Microbial"
-                },
-                {
-                    "description": "Yeast",
-                    "specification": "<1,000 CFU/GM",
-                    "result": "<100 CFU/GM",
-                    "method": "AOAC 997.02/AOAC 2014.05",
-                    "pass_fail": "Pass",
-                    "evaluation": "Microbial"
-                },
-                {
-                    "description": "Mold",
-                    "specification": "<1,000 CFU/GM",
-                    "result": "<100 CFU/GM",
-                    "method": "AOAC 997.02/AOAC 2014.05",
-                    "pass_fail": "Pass",
-                    "evaluation": "Microbial"
-                },
-                {
-                    "description": "Lead",
-                    "specification": "<0.5 PPM",
-                    "result": "<0.5 PPM",
-                    "method": "AOAC 2013.06",
-                    "pass_fail": "Pass",
-                    "evaluation": "Heavy Metal"
-                },
-                {
-                    "description": "Arsenic",
-                    "specification": "<0.5 PPM",
-                    "result": "<0.5 PPM",
-                    "method": "AOAC 2013.06",
-                    "pass_fail": "Pass",
-                    "evaluation": "Heavy Metal"
-                },
-                {
-                    "description": "Mercury",
-                    "specification": "<0.5 PPM",
-                    "result": "<0.5 PPM",
-                    "method": "AOAC 2013.06",
-                    "pass_fail": "Pass",
-                    "evaluation": "Heavy Metal"
-                },
-                {
-                    "description": "Cadmium",
-                    "specification": "<0.5 PPM",
-                    "result": "<0.5 PPM",
-                    "method": "AOAC 2013.06",
-                    "pass_fail": "Pass",
-                    "evaluation": "Heavy Metal"
-                }
-            ];
-            
-            const potencyData = [
-                {
-                    "strain": "Lactobacillus acidophilus (LA-1)",
-                    "specification": 10.0,
-                    "result": 15.2
-                },
-                {
-                    "strain": "Bifidobacterium lactis (BL-04)",
-                    "specification": 10.0,
-                    "result": 12.8
-                },
-                {
-                    "strain": "Lactobacillus rhamnosus (LR-32)",
-                    "specification": 2.0,
-                    "result": 3.5
-                },
-                {
-                    "strain": "Lactobacillus paracasei (LPC-37)",
-                    "specification": 5.0,
-                    "result": 7.2
-                },
-                {
-                    "strain": "Bifidobacterium bifidum (Bi-07)",
-                    "specification": 3.0,
-                    "result": 3.8
-                },
-                {
-                    "strain": "Lactobacillus plantarum (LP-115)",
-                    "specification": 2.0,
-                    "result": 2.9
-                },
-                {
-                    "strain": "Streptococcus thermophilus (ST-21)",
-                    "specification": 3.0,
-                    "result": 4.1
-                }
-            ];
-            
-            const activityData = [
-                {
-                    "time": "0h",
-                    "ph": 6.7,
-                    "lactic_acid": 0.03
-                },
-                {
-                    "time": "2h",
-                    "ph": 6.2,
-                    "lactic_acid": 0.12
-                },
-                {
-                    "time": "4h",
-                    "ph": 5.5,
-                    "lactic_acid": 0.25
-                },
-                {
-                    "time": "6h",
-                    "ph": 4.7,
-                    "lactic_acid": 0.40
-                },
-                {
-                    "time": "8h",
-                    "ph": 4.3,
-                    "lactic_acid": 1.02
-                },
-                {
-                    "time": "10h",
-                    "ph": 4.1,
-                    "lactic_acid": 1.35
-                },
-                {
-                    "time": "12h",
-                    "ph": 3.9,
-                    "lactic_acid": 1.56
-                },
-                {
-                    "time": "14h",
-                    "ph": 3.8,
-                    "lactic_acid": 1.68
-                },
-                {
-                    "time": "16h",
-                    "ph": 3.7,
-                    "lactic_acid": 1.72
-                },
-                {
-                    "time": "18h",
-                    "ph": 3.7,
-                    "lactic_acid": 1.75
-                },
-                {
-                    "time": "20h",
-                    "ph": 3.7,
-                    "lactic_acid": 1.75
-                },
-                {
-                    "time": "24h",
-                    "ph": 3.7,
-                    "lactic_acid": 1.75
-                }
-            ];
+    <div id="loading" class="fixed inset-0 flex items-center justify-center bg-white">
+        <div class="text-center">
+            <p class="mb-4">Loading WebAssembly module...</p>
+            <div id="status"></div>
+            <pre id="debug" class="text-left text-sm text-gray-600 mt-4"></pre>
+        </div>
+    </div>
 
-            // Product metadata
-            const productInfo = {
-                manufacturer: "Master Supplements",
-                product: "Theralac",
-                lotNumber: "07231A",
-                manufacturingDate: "2023-07-23",
-                expirationDate: "2024-07-23",
-                productCode: "TH-1000",
-                batchSize: "10,000 units",
-                storageConditions: "2-8°C",
-                testDate: "2023-08-01"
-            };
-            
-            // Update dashboard with complete data
-            update_purity_data(JSON.stringify(purityData));
-            create_potency_chart(JSON.stringify(potencyData));
-            create_activity_chart(JSON.stringify(activityData));
-            update_product_info(JSON.stringify(productInfo));
+    <script>
+        function updateStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            const div = document.createElement('div');
+            div.className = isError ? 'error' : 'success';
+            div.textContent = message;
+            status.appendChild(div);
+            console.log(isError ? `Error: ${message}` : message);
         }
+
+        function debugLog(message) {
+            const debug = document.getElementById('debug');
+            debug.textContent += message + '\n';
+            console.log(message);
+        }
+
+        // Log current path
+        debugLog(`Current path: ${window.location.href}`);
         
-        run();
+        // Check WebAssembly support
+        if (!('WebAssembly' in window)) {
+            updateStatus('WebAssembly is not supported in this browser', true);
+        }
+    </script>
+
+    <script type="module">
+        async function checkFile(path) {
+            debugLog(`Checking file: ${path}`);
+            try {
+                const response = await fetch(path);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const contentLength = response.headers.get('content-length');
+                debugLog(`Found file: ${path} (${contentLength} bytes)`);
+                return true;
+            } catch (error) {
+                debugLog(`Error loading ${path}: ${error.message}`);
+                return false;
+            }
+        }
+
+        async function run() {
+            try {
+                // Check each required file
+                const files = [
+                    '/pkg/dashboard.js',
+                    '/pkg/dashboard_bg.wasm'
+                ];
+
+                for (const file of files) {
+                    updateStatus(`Checking ${file}...`);
+                    const exists = await checkFile(file);
+                    if (!exists) {
+                        throw new Error(`Required file not found: ${file}`);
+                    }
+                }
+
+                updateStatus('Loading WASM module...');
+                const { default: init, initialize_dashboard } = await import('/pkg/dashboard.js');
+                
+                updateStatus('Initializing WASM...');
+                await init();
+                await initialize_dashboard();
+                
+                updateStatus('Dashboard ready!');
+                setTimeout(() => {
+                    document.getElementById('loading').style.display = 'none';
+                }, 1000);
+
+            } catch (error) {
+                updateStatus(`Fatal error: ${error.message}`, true);
+                debugLog(`Stack trace: ${error.stack}`);
+            }
+        }
+
+        // Start the application
+        run().catch(error => {
+            updateStatus(`Startup error: ${error.message}`, true);
+            debugLog(`Startup stack trace: ${error.stack}`);
+        });
     </script>
 </body>
 </html>

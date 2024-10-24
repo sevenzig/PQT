@@ -1,9 +1,19 @@
 use wasm_bindgen::prelude::*;
-use web_sys::{Document, Element, HtmlElement, window};
-use serde::{Deserialize, Serialize};
+use web_sys::{Document, Element, window};
+
+// Logging helper
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+}
+
+macro_rules! console_log {
+    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
+}
 
 // Data structures
-#[derive(Serialize, Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize)]
 struct PurityData {
     description: String,
     specification: String,
@@ -12,55 +22,56 @@ struct PurityData {
     pass_fail: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize)]
 struct PotencyData {
     strain: String,
     specification: f64,
     result: f64,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize)]
 struct ActivityData {
     time: String,
     ph: f64,
     lactic_acid: f64,
 }
 
-// Main WASM initialization
 #[wasm_bindgen(start)]
 pub fn main() -> Result<(), JsValue> {
-    let window = window().unwrap();
-    let document = window.document().unwrap();
-    
-    create_dashboard(&document)?;
+    console_log!("WASM module initialized");
     Ok(())
 }
 
-// Create main dashboard structure
 #[wasm_bindgen]
-pub fn create_dashboard(document: &Document) -> Result<(), JsValue> {
-    // Create root container
+pub fn initialize_dashboard() -> Result<(), JsValue> {
+    let window = window().unwrap();
+    let document = window.document().unwrap();
+    console_log!("Creating dashboard structure...");
+    
     let container = document.create_element("div")?;
     container.set_class_name("flex h-screen bg-gray-100");
     
-    // Add left navigation
-    container.append_child(&create_left_nav(document)?)?;
+    // Create and append left navigation
+    let left_nav = create_left_nav(&document)?;
+    container.append_child(&left_nav)?;
     
-    // Add summary panel
-    container.append_child(&create_summary_panel(document)?)?;
+    // Create and append summary panel
+    let summary_panel = create_summary_panel(&document)?;
+    container.append_child(&summary_panel)?;
     
-    // Add main content
-    container.append_child(&create_main_content(document)?)?;
+    // Create and append main content
+    let main_content = create_main_content(&document)?;
+    container.append_child(&main_content)?;
     
-    // Append to body
+    // Append the container to body
     document.body()
         .unwrap()
         .append_child(&container)?;
     
+    console_log!("Dashboard structure created successfully");
     Ok(())
 }
 
-// Create left navigation
 fn create_left_nav(document: &Document) -> Result<Element, JsValue> {
     let nav = document.create_element("div")?;
     nav.set_class_name("w-16 bg-blue-600 text-white h-screen flex flex-col items-center py-4");
@@ -71,9 +82,9 @@ fn create_left_nav(document: &Document) -> Result<Element, JsValue> {
     logo.set_class_name("rounded-lg mb-8");
     nav.append_child(&logo)?;
     
-    // Add navigation buttons
-    let icons = vec!["⊞", "📊", "🏢", "📦", "📄"];
-    for icon in icons {
+    // Add navigation buttons with Unicode icons
+    let icons = ["⊞", "📊", "🏢", "📦", "📄"];
+    for icon in icons.iter() {
         let button = document.create_element("button")?;
         button.set_class_name("p-3 mb-4 hover:bg-blue-700 rounded-full text-xl");
         button.set_text_content(Some(icon));
@@ -83,125 +94,67 @@ fn create_left_nav(document: &Document) -> Result<Element, JsValue> {
     Ok(nav)
 }
 
-// Helper function to create sections
-fn create_section(document: &Document, title: &str) -> Result<Element, JsValue> {
-    let section = document.create_element("div")?;
-    section.set_class_name("bg-white rounded-lg shadow-sm mb-6");
+fn create_summary_panel(document: &Document) -> Result<Element, JsValue> {
+    let panel = document.create_element("div")?;
+    panel.set_class_name("w-72 bg-white border-r border-gray-200 h-screen overflow-auto");
     
-    let header = document.create_element("div")?;
-    header.set_class_name("p-4 border-b border-gray-200");
+    let content = document.create_element("div")?;
+    content.set_class_name("p-6");
     
-    let title_elem = document.create_element("h2")?;
-    title_elem.set_class_name("text-lg font-semibold text-gray-900 font-inter");
-    title_elem.set_text_content(Some(title));
+    // Add header image
+    let header_img = document.create_element("img")?;
+    header_img.set_attribute("src", "/api/placeholder/240/60")?;
+    header_img.set_class_name("rounded-lg mb-6");
+    content.append_child(&header_img)?;
     
-    header.append_child(&title_elem)?;
-    section.append_child(&header)?;
+    // Add title
+    let title = document.create_element("h2")?;
+    title.set_class_name("text-xl font-semibold mb-6 text-gray-800");
+    title.set_text_content(Some("Lot Summary"));
+    content.append_child(&title)?;
     
-    Ok(section)
+    panel.append_child(&content)?;
+    Ok(panel)
 }
 
-// Create purity table
-fn create_purity_table(document: &Document) -> Result<Element, JsValue> {
-    let table = document.create_element("table")?;
-    table.set_class_name("w-full");
+fn create_main_content(document: &Document) -> Result<Element, JsValue> {
+    let content = document.create_element("div")?;
+    content.set_class_name("flex-1 flex");
     
-    // Create table header
-    let thead = document.create_element("thead")?;
-    thead.set_class_name("bg-gray-50");
+    let inner = document.create_element("div")?;
+    inner.set_class_name("flex-1 overflow-auto p-6");
     
-    let headers = vec!["Description", "Specification", "Result", "Method", "Status"];
-    let tr = document.create_element("tr")?;
+    // Add header
+    let header = document.create_element("h1")?;
+    header.set_class_name("text-2xl font-semibold mb-6");
+    header.set_text_content(Some("Quality Report"));
+    inner.append_child(&header)?;
     
-    for header in headers {
-        let th = document.create_element("th")?;
-        th.set_class_name("text-left px-6 py-4 text-sm font-medium text-gray-600 font-inter");
-        th.set_text_content(Some(header));
-        tr.append_child(&th)?;
-    }
-    
-    thead.append_child(&tr)?;
-    table.append_child(&thead)?;
-    
-    Ok(table)
+    content.append_child(&inner)?;
+    Ok(content)
 }
 
-// Update table with data
+// Data update functions
 #[wasm_bindgen]
-pub fn update_purity_data(data: &JsValue) -> Result<(), JsValue> {
-    let purity_data: Vec<PurityData> = serde_json::from_str(
-        &data.as_string().unwrap()
-    ).unwrap();
-    
-    let document = window().unwrap().document().unwrap();
-    let table = document.get_element_by_id("purityTable").unwrap();
-    let tbody = table.query_selector("tbody").unwrap().unwrap();
-    
-    for row in purity_data {
-        let tr = document.create_element("tr")?;
-        tr.set_class_name("hover:bg-gray-50");
-        
-        let cells = vec![
-            row.description,
-            row.specification,
-            row.result,
-            row.method,
-            if row.pass_fail == "Pass" { "✓".to_string() } else { "".to_string() }
-        ];
-        
-        for cell_text in cells {
-            let td = document.create_element("td")?;
-            td.set_class_name("px-6 py-4 text-sm text-gray-600 font-inter");
-            td.set_text_content(Some(&cell_text));
-            tr.append_child(&td)?;
-        }
-        
-        tbody.append_child(&tr)?;
-    }
-    
+pub fn update_purity_data(data: String) -> Result<(), JsValue> {
+    console_log!("Processing purity data update...");
+    let _purity_data: Vec<PurityData> = serde_json::from_str(&data)
+        .map_err(|e| JsValue::from_str(&e.to_string()))?;
     Ok(())
 }
 
-// Create charts
 #[wasm_bindgen]
-pub fn create_potency_chart(data: &JsValue) -> Result<(), JsValue> {
-    let potency_data: Vec<PotencyData> = serde_json::from_str(
-        &data.as_string().unwrap()
-    ).unwrap();
-    
-    let document = window().unwrap().document().unwrap();
-    let container = document.get_element_by_id("potencyChart").unwrap();
-    
-    for item in potency_data {
-        let bar_group = document.create_element("div")?;
-        bar_group.set_class_name("flex flex-col items-center");
-        
-        // Create bars
-        let bars = document.create_element("div")?;
-        bars.set_class_name("h-40 flex items-end");
-        
-        // Specification bar
-        let spec_bar = document.create_element("div")?;
-        spec_bar.set_class_name("w-12 bg-gray-200 mr-1");
-        spec_bar.set_attribute("style", &format!("height: {}%", (item.specification/15.0)*100.0))?;
-        
-        // Result bar
-        let result_bar = document.create_element("div")?;
-        result_bar.set_class_name("w-12 bg-blue-500");
-        result_bar.set_attribute("style", &format!("height: {}%", (item.result/15.0)*100.0))?;
-        
-        bars.append_child(&spec_bar)?;
-        bars.append_child(&result_bar)?;
-        bar_group.append_child(&bars)?;
-        
-        // Label
-        let label = document.create_element("div")?;
-        label.set_class_name("text-sm text-gray-600 transform -rotate-45 origin-top-left mt-4");
-        label.set_text_content(Some(&item.strain));
-        bar_group.append_child(&label)?;
-        
-        container.append_child(&bar_group)?;
-    }
-    
+pub fn update_potency_data(data: String) -> Result<(), JsValue> {
+    console_log!("Processing potency data update...");
+    let _potency_data: Vec<PotencyData> = serde_json::from_str(&data)
+        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+    Ok(())
+}
+
+#[wasm_bindgen]
+pub fn update_activity_data(data: String) -> Result<(), JsValue> {
+    console_log!("Processing activity data update...");
+    let _activity_data: Vec<ActivityData> = serde_json::from_str(&data)
+        .map_err(|e| JsValue::from_str(&e.to_string()))?;
     Ok(())
 }
