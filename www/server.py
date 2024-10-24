@@ -1,26 +1,14 @@
-import http.server
-import socketserver
-import os
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+import sys
 
-PORT = 8000
-
-class DebugHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+class Handler(SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
-        print(f"[Request] {self.path}")
-        print(f"[Current Dir] {os.getcwd()}")
-        print(f"[File Exists] {os.path.exists('.' + self.path)}")
-        super().log_message(format, *args)
+        print(f"Request: {self.path}")
+        sys.stdout.flush()
 
-with socketserver.TCPServer(("", PORT), DebugHTTPRequestHandler) as httpd:
-    print(f"Serving at port {PORT}")
-    print(f"Current directory: {os.getcwd()}")
-    print("\nAvailable files:")
-    for root, dirs, files in os.walk("."):
-        level = root.replace(".", "").count(os.sep)
-        indent = " " * 4 * level
-        print(f"{indent}{os.path.basename(root)}/")
-        subindent = " " * 4 * (level + 1)
-        for f in files:
-            print(f"{subindent}{f}")
+port = 3000
+print(f"Starting server on http://localhost:{port}")
+print(f"Press Ctrl+C to stop")
+sys.stdout.flush()
 
-    httpd.serve_forever()
+HTTPServer(('localhost', port), Handler).serve_forever()
