@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quality Analysis Dashboard</title>
+    <script src="https://cdn.tailwindcss.com" defer></script>
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;,">
+</head>
+<body class="bg-gray-50">
+    <div id="loading" class="fixed inset-0 flex items-center justify-center bg-white">
+        <div class="text-center">
+            <p class="text-lg">Loading Dashboard...</p>
+            <div id="status" class="text-sm text-gray-600 mt-2"></div>
+        </div>
+    </div>
+
+    <div id="dashboard" class="container mx-auto px-4 py-8">
+        <div class="mb-8">
+            <label for="lot-number" class="block text-sm font-medium text-gray-700">Lot Number</label>
+            <div class="mt-1 flex rounded-md shadow-sm">
+                <input type="text" 
+                       name="lot-number" 
+                       id="lot-number" 
+                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                       placeholder="Enter lot number">
+                <button type="button" 
+                        id="load-lot"
+                        class="ml-3 inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700">
+                    Load Data
+                </button>
+            </div>
+        </div>
+
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Potency Data</h2>
+            <div id="potency-content" class="bg-white shadow rounded-lg p-6 h-96"></div>
+        </div>
+
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Purity Data</h2>
+            <div id="purity-content" class="bg-white shadow rounded-lg p-6"></div>
+        </div>
+
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Activity Data</h2>
+            <div id="activity-content" class="bg-white shadow rounded-lg p-6"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import init, { 
+            initialize_dashboard, 
+            update_potency_data, 
+            update_purity_data, 
+            update_activity_data, 
+            load_lot_data 
+        } from './pkg/dashboard.js';
+
+        const setupDashboard = async () => {
+            try {
+                console.log("Loading WASM module...");
+                await init();
+                
+                console.log("Initializing WASM...");
+                await initialize_dashboard();
+                
+                document.getElementById('load-lot').addEventListener('click', async () => {
+                    const lotNumber = document.getElementById('lot-number').value;
+                    if (!lotNumber) {
+                        alert('Please enter a lot number');
+                        return;
+                    }
+                    
+                    try {
+                        document.getElementById('loading').style.display = 'flex';
+                        await load_lot_data(lotNumber);
+                    } catch (e) {
+                        console.error("Error loading lot data:", e);
+                        document.getElementById('status').textContent = e.toString();
+                    } finally {
+                        document.getElementById('loading').style.display = 'none';
+                    }
+                });
+                
+                document.getElementById('loading').style.display = 'none';
+            } catch (e) {
+                console.error("Dashboard Error:", e);
+                document.getElementById('status').textContent = e.toString();
+            }
+        };
+
+        window.addEventListener('load', setupDashboard);
+    </script>
+</body>
+</html>
